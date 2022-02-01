@@ -1,0 +1,33 @@
+{
+    "name": "themosis/composer-exclude-files",
+    "description": "Composer plugin that allows you to exclude files from autoload.",
+    "type": "composer-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Julien",
+            "email": "julien@themosis.com"
+        }
+    ],
+    "require": {
+        "composer-plugin-api": "^2.0"
+    },
+    "require-dev": {
+        "composer/composer": "^2.2",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Themosis\\ComposerExcludeFiles\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Themosis\\ComposerExcludeFiles\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "class": "Themosis\\ComposerExcludeFiles\\ExcludeFilesPlugin"
+    },
+    "minimum-stability": "stable"
+}
