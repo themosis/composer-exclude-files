@@ -3,6 +3,7 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          cacheResultFile=".phpunit.cache/test-results"
+         colors="true"
          executionOrder="depends,defects"
          forceCoversAnnotation="true"
          beStrictAboutCoversAnnotation="true"
@@ -13,15 +14,18 @@
          failOnWarning="true"
          verbose="true">
     <testsuites>
-        <testsuite name="default">
+        <testsuite name="Exclude Files Testsuite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-
     <coverage cacheDirectory=".phpunit.cache/code-coverage"
               processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <report>
+            <html outputDirectory="build/html"/>
+            <text outputFile="build/coverage.txt"/>
+        </report>
     </coverage>
 </phpunit>

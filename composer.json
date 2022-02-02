@@ -30,5 +30,8 @@
     "extra": {
         "class": "Themosis\\ComposerExcludeFiles\\ExcludeFilesPlugin"
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "XDEBUG_MODE=coverage phpunit"
+    }
 }
