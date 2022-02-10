@@ -1,0 +1,25 @@
+{
+  "name": "plugin/package-1",
+  "version": "1.0.0",
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../package-2"
+    }
+  ],
+  "require": {
+    "plugin/package-2": "*"
+  },
+  "config": {
+    "allow-plugins": {
+      "themosis/composer-exclude-files": true
+    }
+  },
+  "extra": {
+    "exclude-files": {
+      "plugin/package-3": [
+        "src/helpers.php"
+      ]
+    }
+  }
+}
