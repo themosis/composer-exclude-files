@@ -18,6 +18,8 @@ class ExcludeFilesPlugin implements PluginInterface, EventSubscriberInterface
     {
         $this->composer = $composer;
         $this->io = $io;
+
+        $io->write("Themosis Exclude Files plugin activated.");
     }
 
     public function deactivate(Composer $composer, IOInterface $io)
@@ -33,11 +35,11 @@ class ExcludeFilesPlugin implements PluginInterface, EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-             ScriptEvents::PRE_AUTOLOAD_DUMP => 'handlePreAutoloadDump',
+             ScriptEvents::PRE_AUTOLOAD_DUMP => 'onPreAutoloadDump',
         ];
     }
 
-    public function handlePreAutoloadDump(Event $event): void
+    public function onPreAutoloadDump(Event $event): void
     {
         $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
         $repositories = $this->composer->getRepositoryManager()->getRepositories();
