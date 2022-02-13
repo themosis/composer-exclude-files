@@ -49,7 +49,7 @@ class ExcludeFilesPluginTest extends TestCase
 
         chdir($this->baseDirectory);
 
-        $config = new Config(false);
+        $config = new Config(false, $this->baseDirectory);
         $config->merge([
             'config' => [
                 'vendor-dir' => $this->vendorDirectory,
@@ -59,9 +59,6 @@ class ExcludeFilesPluginTest extends TestCase
         $io = $this->createStub(IOInterface::class);
 
         $this->repository = $this->createStub(InstalledRepositoryInterface::class);
-        $repositoryManager = $this->createStub(RepositoryManager::class);
-        $repositoryManager->method('getLocalRepository')
-            ->willReturn($this->repository);
 
         $installationManager = $this->createStub(InstallationManager::class);
         $installationManager->method('getInstallPath')
