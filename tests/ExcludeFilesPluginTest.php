@@ -2,95 +2,31 @@
 
 namespace Themosis\ComposerExcludeFiles\Tests;
 
-use Composer\Autoload\AutoloadGenerator;
-use Composer\Composer;
-use Composer\Config;
-use Composer\EventDispatcher\EventDispatcher;
-use Composer\Installer\InstallationManager;
-use Composer\IO\IOInterface;
+use Composer\IO\BufferIO;
 use Composer\Package\Link;
 use Composer\Package\Package;
-use Composer\Package\PackageInterface;
 use Composer\Package\RootPackage;
-use Composer\Repository\InstalledRepositoryInterface;
-use Composer\Repository\RepositoryManager;
+use Composer\Script\ScriptEvents;
 use Composer\Semver\Constraint\MatchAllConstraint;
-use Composer\Util\Filesystem;
-use PHPUnit\Framework\TestCase;
+use Themosis\ComposerExcludeFiles\ExcludeFilesPlugin;
 
 /**
  * @covers \Themosis\ComposerExcludeFiles\ExcludeFilesPlugin
  */
 class ExcludeFilesPluginTest extends TestCase
 {
-    private string $baseDirectory;
-
-    private string $vendorDirectory;
-
-    private Filesystem $fs;
-
-    private Composer $composer;
-
-    private IOInterface $io;
-
-    private InstalledRepositoryInterface $repository;
-
-    private Config $config;
-
-    private InstallationManager $installationManager;
-
-    protected function setUp(): void
+    /**
+     * @test
+     */
+    public function it_is_registered_on_pre_dump_autoload_event(): void
     {
-        $this->fs = new Filesystem();
-        $this->baseDirectory = sys_get_temp_dir().'/themosis/composer-exclude-files';
-        $this->vendorDirectory = $this->baseDirectory.'/vendor';
-
-        $this->fs->ensureDirectoryExists($this->baseDirectory);
-
-        chdir($this->baseDirectory);
-
-        $config = new Config(false, $this->baseDirectory);
-        $config->merge([
-            'config' => [
-                'vendor-dir' => $this->vendorDirectory,
-            ],
-        ]);
-
-        $io = $this->createStub(IOInterface::class);
-
-        $this->repository = $this->createStub(InstalledRepositoryInterface::class);
-
-        $installationManager = $this->createStub(InstallationManager::class);
-        $installationManager->method('getInstallPath')
-            ->willReturnCallback(function (PackageInterface $package) {
-                $basePath = ($this->vendorDirectory ? $this->vendorDirectory.'/' : '') . $package->getPrettyName();
-                $targetDir = $package->getTargetDir();
-
-                return $basePath . ($targetDir ? '/'.$targetDir : '');
-            });
-        $this->installationManager = $installationManager;
-
-        $composer = new Composer();
-        $composer->setConfig($config);
-        $composer->setInstallationManager($installationManager);
-        $composer->setAutoloadGenerator(
-            new AutoloadGenerator($this->createStub(EventDispatcher::class))
-        );
-
-        $this->config = $config;
-        $this->io = $io;
-        $this->composer = $composer;
+        $this->assertArrayHasKey(ScriptEvents::PRE_AUTOLOAD_DUMP, ExcludeFilesPlugin::getSubscribedEvents());
     }
 
-    protected function tearDown(): void
-    {
-        if (is_dir($this->baseDirectory)) {
-            //$this->fs->removeDirectory($this->baseDirectory);
-        }
-    }
-
-    /** @test */
-    public function it_can_exclude_files_from_autoloader(): void
+    /**
+     * @test
+     */
+    public function it_can_exclude_files_from_autoloader_defined_in_root_package(): void
     {
         $rootPackage = new RootPackage('fake/root-package', '1.0.0', '1.0.0');
         $rootPackage->setRequires([
@@ -105,6 +41,8 @@ class ExcludeFilesPluginTest extends TestCase
             ],
         ]);
 
+        $this->composer->setPackage($rootPackage);
+
         $packageA = new Package('fake/package-a', '1.0.0', '1.0.0');
         $packageA->setRequires([
             'fake/package-b' => new Link('fake/package-a', 'fake/package-b', new MatchAllConstraint())
@@ -114,9 +52,6 @@ class ExcludeFilesPluginTest extends TestCase
                 'src/helpers.php',
             ]
         ]);
-
-        /*$this->fs->ensureDirectoryExists($this->vendorDirectory.'/fake/package-a/src');
-        file_put_contents($this->vendorDirectory.'/fake/package-a/src/helpers.php', '<?php function package_a_test() {}');*/
 
         $packageB = new Package('fake/package-b', '1.0.0', '1.0.0');
         $packageB->setRequires([
@@ -129,22 +64,19 @@ class ExcludeFilesPluginTest extends TestCase
             ]
         ]);
 
-        $packageC = new Package('fake/package-c', '1.0.0', '1.0.0');
-        $packageC->setAutoload([
-            'files' => [
-                'lib/fakes.php',
-                'src/common.php',
-            ]
-        ]);
+        $this->repository->method('getDevPackageNames')
+            ->willReturn([]);
 
         $this->repository->method('getCanonicalPackages')
             ->willReturn([
                 $packageA,
                 $packageB,
-                $packageC,
             ]);
-        $this->repository->method('getDevPackageNames')
-            ->willReturn([]);
+
+        $plugin = new ExcludeFilesPlugin();
+        $plugin->activate($this->composer, new BufferIO());
+
+        $plugin->onPreAutoloadDump();
 
         $this->composer->getAutoloadGenerator()->dump(
             $this->composer->getConfig(),

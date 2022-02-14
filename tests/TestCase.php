@@ -10,6 +10,7 @@ use Composer\Installer\InstallationManager;
 use Composer\IO\IOInterface;
 use Composer\Package\PackageInterface;
 use Composer\Repository\InstalledRepositoryInterface;
+use Composer\Repository\RepositoryManager;
 use Composer\Util\Filesystem;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
@@ -20,6 +21,8 @@ class TestCase extends BaseTestCase
     protected Filesystem $filesystem;
 
     protected string $baseDirectory;
+
+    protected InstalledRepositoryInterface $repository;
 
     protected Composer $composer;
 
@@ -38,10 +41,15 @@ class TestCase extends BaseTestCase
 
         $this->repository = $this->createStub(InstalledRepositoryInterface::class);
 
+        $repositoryManager = $this->createStub(RepositoryManager::class);
+        $repositoryManager->method('getLocalRepository')
+            ->willReturn($this->repository);
+
         $installationManager = $this->getInstallationManager($vendorDirectory);
 
         $composer = new Composer();
         $composer->setConfig($config);
+        $composer->setRepositoryManager($repositoryManager);
         $composer->setInstallationManager($installationManager);
         $composer->setAutoloadGenerator(
             new AutoloadGenerator($this->createStub(EventDispatcher::class))

@@ -5,8 +5,8 @@ namespace Themosis\ComposerExcludeFiles;
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
 use Composer\IO\IOInterface;
+use Composer\Package\PackageInterface;
 use Composer\Plugin\PluginInterface;
-use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
 
 class ExcludeFilesPlugin implements PluginInterface, EventSubscriberInterface
@@ -19,7 +19,7 @@ class ExcludeFilesPlugin implements PluginInterface, EventSubscriberInterface
         $this->composer = $composer;
         $this->io = $io;
 
-        $io->write("Themosis Exclude Files plugin activated.");
+        $io->write("Composer Exclude Files plugin activated.");
     }
 
     public function deactivate(Composer $composer, IOInterface $io)
@@ -39,19 +39,64 @@ class ExcludeFilesPlugin implements PluginInterface, EventSubscriberInterface
         ];
     }
 
-    public function onPreAutoloadDump(Event $event): void
+    public function onPreAutoloadDump(): void
     {
-        $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getPackages();
-        $repositories = $this->composer->getRepositoryManager()->getRepositories();
+        $packages = $this->composer->getRepositoryManager()->getLocalRepository()->getCanonicalPackages();
 
-        foreach ($repositories as $repository) {
-            $packages = $repository->getPackages();
+        $generator = $this->composer->getAutoloadGenerator();
+        $packageMap = $generator->buildPackageMap(
+            $this->composer->getInstallationManager(),
+            $this->composer->getPackage(),
+            $packages,
+        );
 
-            foreach ($packages as $package) {
-                var_dump($package->getName());
+        $this->filterPackagesAutoload($packageMap);
+    }
+
+    protected function filterPackagesAutoload(array $packageMap): void
+    {
+        $excludedFiles = $this->getExcludedFiles($packageMap);
+
+        foreach ($packageMap as $item) {
+            /**
+             * @var PackageInterface $package
+             * @var string $path
+             */
+            list($package, $path) = $item;
+
+            $autoload = $package->getAutoload();
+
+            dump($autoload);
+        }
+    }
+
+    protected function getExcludedFiles(array $packageMap): array
+    {
+        $exclusionList = [];
+
+        foreach ($packageMap as $item) {
+            /**
+             * @var PackageInterface $package
+             */
+            list($package) = $item;
+
+            $extra = $package->getExtra();
+
+            if (empty($extra['exclude-from-files'])) {
+                continue;
+            }
+
+            foreach ($extra['exclude-from-files'] as $packageName => $files) {
+                if (! is_string($packageName) || ! is_array($files) || empty($files)) {
+                    continue;
+                }
+
+                foreach ($files as $relativeFilePath) {
+                    $exclusionList[] = trim($packageName, '\/').'/'.trim($relativeFilePath, '\/');
+                }
             }
         }
 
-        $generator = $this->composer->getAutoloadGenerator();
+        return array_unique($exclusionList);
     }
 }
