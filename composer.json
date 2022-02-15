@@ -1,8 +1,8 @@
 {
     "name": "themosis/composer-exclude-files",
-    "description": "Composer plugin that allows you to exclude files from autoload.",
+    "description": "Composer plugin that allows you to exclude files from autoloader.",
     "type": "composer-plugin",
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "authors": [
         {
             "name": "Julien",
