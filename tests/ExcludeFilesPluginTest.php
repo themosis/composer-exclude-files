@@ -91,7 +91,7 @@ class ExcludeFilesPluginTest extends TestCase
         $this->assertCount(2, $files);
         $this->assertFalse(in_array($this->vendorPath('fake/package-b/src/helpers.php'), $files, true));
     }
-    
+
     /**
      * @test
      */

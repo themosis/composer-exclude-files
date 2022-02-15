@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
-    const BASE_DIR_NAME = 'com.themosis.composer-exclude-files';
+    public const BASE_DIR_NAME = 'com.themosis.composer-exclude-files';
 
     protected Filesystem $filesystem;
 
