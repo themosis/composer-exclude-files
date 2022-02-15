@@ -86,6 +86,77 @@ class ExcludeFilesPluginTest extends TestCase
             'composer'
         );
 
-        $this->assertTrue(true);
+        $files = require $this->vendorPath('composer/autoload_files.php');
+
+        $this->assertCount(2, $files);
+        $this->assertFalse(in_array($this->vendorPath('fake/package-b/src/helpers.php'), $files, true));
+    }
+    
+    /**
+     * @test
+     */
+    public function it_can_exclude_files_from_autoloader_defined_in_sub_package(): void
+    {
+        $rootPackage = new RootPackage('fake/root-package', '1.0.0', '1.0.0');
+        $rootPackage->setRequires([
+            'fake/package-a' => new Link('a', 'fake/package-a', new MatchAllConstraint())
+        ]);
+
+        $this->composer->setPackage($rootPackage);
+
+        $packageA = new Package('fake/package-a', '1.0.0', '1.0.0');
+        $packageA->setRequires([
+            'fake/package-b' => new Link('fake/package-a', 'fake/package-b', new MatchAllConstraint())
+        ]);
+        $packageA->setAutoload([
+            'files' => [
+                'src/helpers.php',
+                'src/custom.php'
+            ]
+        ]);
+        $packageA->setExtra([
+            'exclude-from-files' => [
+                'fake/package-b' => [
+                    'src/helpers.php',
+                    'src/utilities.php',
+                ]
+            ],
+        ]);
+
+        $packageB = new Package('fake/package-b', '1.0.0', '1.0.0');
+        $packageB->setAutoload([
+            'files' => [
+                'src/helpers.php',
+                'src/utilities.php',
+            ]
+        ]);
+
+        $this->repository->method('getDevPackageNames')
+            ->willReturn([]);
+
+        $this->repository->method('getCanonicalPackages')
+            ->willReturn([
+                $packageA,
+                $packageB,
+            ]);
+
+        $plugin = new ExcludeFilesPlugin();
+        $plugin->activate($this->composer, new BufferIO());
+
+        $plugin->onPreAutoloadDump();
+
+        $this->composer->getAutoloadGenerator()->dump(
+            $this->composer->getConfig(),
+            $this->repository,
+            $rootPackage,
+            $this->composer->getInstallationManager(),
+            'composer'
+        );
+
+        $files = require $this->vendorPath('composer/autoload_files.php');
+
+        $this->assertCount(2, $files);
+        $this->assertFalse(in_array($this->vendorPath('fake/package-b/src/helpers.php'), $files, true));
+        $this->assertFalse(in_array($this->vendorPath('fake/package-b/src/utilities.php'), $files, true));
     }
 }

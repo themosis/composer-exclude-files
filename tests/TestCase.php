@@ -20,7 +20,7 @@ class TestCase extends BaseTestCase
 
     protected Filesystem $filesystem;
 
-    protected string $baseDirectory;
+    private string $baseDirectory;
 
     protected InstalledRepositoryInterface $repository;
 
@@ -31,13 +31,12 @@ class TestCase extends BaseTestCase
         $this->filesystem = new Filesystem();
 
         $this->baseDirectory = $baseDirectory = $this->getBaseDirectory();
-        $vendorDirectory = $baseDirectory.'/vendor';
 
         $this->filesystem->ensureDirectoryExists($baseDirectory);
 
         chdir($baseDirectory);
 
-        $config = $this->getConfiguration($baseDirectory, $vendorDirectory);
+        $config = $this->getConfiguration($baseDirectory, $this->vendorDirectory());
 
         $this->repository = $this->createStub(InstalledRepositoryInterface::class);
 
@@ -45,7 +44,7 @@ class TestCase extends BaseTestCase
         $repositoryManager->method('getLocalRepository')
             ->willReturn($this->repository);
 
-        $installationManager = $this->getInstallationManager($vendorDirectory);
+        $installationManager = $this->getInstallationManager($this->vendorDirectory());
 
         $composer = new Composer();
         $composer->setConfig($config);
@@ -64,6 +63,21 @@ class TestCase extends BaseTestCase
             // Remove directory at test end.
             // $this->filesystem->removeDirectory($this->baseDirectory);
         }
+    }
+
+    public function baseDirectory(): string
+    {
+        return $this->baseDirectory;
+    }
+
+    public function vendorDirectory(): string
+    {
+        return $this->baseDirectory.'/vendor';
+    }
+
+    public function vendorPath(string $path = null): string
+    {
+        return $this->vendorDirectory() . ($path ? '/'.ltrim($path, '\/') : '');
     }
 
     private function getBaseDirectory(): string
