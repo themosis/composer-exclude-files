@@ -61,7 +61,7 @@ class TestCase extends BaseTestCase
     {
         if (is_dir($this->baseDirectory)) {
             // Remove directory at test end.
-            // $this->filesystem->removeDirectory($this->baseDirectory);
+            $this->filesystem->removeDirectory($this->baseDirectory);
         }
     }
 
