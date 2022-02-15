@@ -33,6 +33,7 @@
     },
     "minimum-stability": "stable",
     "scripts": {
-        "test": "XDEBUG_MODE=coverage phpunit"
+        "test": "XDEBUG_MODE=coverage phpunit",
+        "fix": "tools/php-cs-fixer/vendor/bin/php-cs-fixer fix"
     }
 }
